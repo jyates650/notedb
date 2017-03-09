@@ -1,12 +1,9 @@
-import configparser
 import pandas as pd
 
 class Tape:
-    
-    def parse_tape_config_file(self, config_file):
-        self.config = configparser.ConfigParser()
-        self.config.optionxform = str # Prevents automatic lower casing of ini
-        self.config.read(config_file)
+
+    def __init__(self, config):
+        self.config = config
         
     def parse_tape_excel_file(self, excel_file):
         self.data_frame = pd.read_excel(excel_file)
