@@ -8,7 +8,9 @@ password = 'bassfish'
 host = 'localhost'
 port = '3306'
 database = 'dev_notedb'
+
 engine = create_engine('mysql+mysqlconnector://root:bassfish@localhost/dev_notedb', echo=True)
+
 
 Base = declarative_base()
 
