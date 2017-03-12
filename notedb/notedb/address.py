@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, ForeignKey
+from sqlalchemy import Column, Integer
 from sqlalchemy.orm import relationship
 from notedb.database import Base
 
