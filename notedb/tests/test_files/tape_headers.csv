@@ -1,0 +1,4 @@
+TapeFormat,PropAddr,PropCity,PropState,PropZip,BPO,Comment
+format1,Address,City,State,Zip,BPO,
+format2,addr,city,state,zipcode,BPO,
+format3,,city,ASDF,1337,BroPO,

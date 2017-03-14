@@ -1,4 +1,5 @@
 import os
+import shutil
 from notedb.tape import TapeParser
 
 class TestTapeParser:
@@ -6,32 +7,45 @@ class TestTapeParser:
     def setUp(self):
         self.config = {'column_mapping': {'Header1': 'TestHeader1', 'Header2': 'TestHeader2'}}
         tests_dir = os.path.dirname(os.path.abspath(__file__))
+        self.temp_dir = os.path.join(tests_dir, 'temp')
+        os.mkdir(self.temp_dir)
         test_files_dir = os.path.join(tests_dir, 'test_files') 
         self.simple_test_tape_xlsx = os.path.join(test_files_dir, 'simple_test_tape.xlsx')
+        self.tape_headers_csv = os.path.join(test_files_dir, 'tape_headers.csv')
+        self.test_tape_format_1_xlsx = os.path.join(test_files_dir, 'test_tape_format_1.xlsx')
+        
+    def tearDown(self):
+        shutil.rmtree(self.temp_dir)
         
     def test_excel_parsing(self):
-        tape_parser = TapeParser(self.config)
-        tape_parser.parse_new_tape_xls(self.simple_test_tape_xlsx)
-        df = tape_parser.data_frame
+        tape_parser = TapeParser(self.simple_test_tape_xlsx)
+        df = tape_parser.tape_df
         assert df['TestHeader1'][0] == 'TestData11'
         assert df['TestHeader1'][1] == 'TestData21'
         assert df['TestHeader2'][0] == 'TestData12'
         assert df['TestHeader2'][1] == 'TestData22'
         
     def test_pandas_rename_column(self):
-        tape_parser = TapeParser(self.config)
-        tape_parser.parse_new_tape_xls(self.simple_test_tape_xlsx)
-        df = tape_parser.data_frame
+        tape_parser = TapeParser(self.simple_test_tape_xlsx)
+        df = tape_parser.tape_df
         df.rename(columns={'TestHeader1': 'Header1'}, inplace=True)
         assert df['Header1'][0] == 'TestData11'
+    
+    def test_update_tape_headers_from_csv(self):
+        tape_parser = TapeParser(self.test_tape_format_1_xlsx)
+        df = tape_parser.tape_df
+        assert df['City'][0] == 'Methuen'
+        assert len(df.columns) == 5
+        tape_parser.update_tape_headers_from_csv(self.tape_headers_csv, 'format1')
+        assert df['PropCity'][1] == 'Carlisle'
+        assert df['Comment'][0] == ''
+        assert len(df.columns) == 6
         
-        
-    def test_standardize_column_names(self):
-        tape_parser = TapeParser(self.config)
-        tape_parser.parse_new_tape_xls(self.simple_test_tape_xlsx)
-        tape_parser.standardize_column_names()
-        df = tape_parser.data_frame
-        assert df['Header1'][0] == 'TestData11'
-        assert df['Header1'][1] == 'TestData21'
-        assert df['Header2'][0] == 'TestData12'
-        assert df['Header2'][1] == 'TestData22'
+    def test_excel_writing(self):
+        tape_parser = TapeParser(self.simple_test_tape_xlsx)
+        df1 = tape_parser.tape_df
+        out_file = os.path.join(self.temp_dir, 'outfile1.xlsx')
+        tape_parser.write_tape_xls(out_file)
+        tp2 = TapeParser(out_file)
+        df2 = tp2.tape_df
+        assert df1['TestHeader1'][1] == df2['TestHeader1'][1]

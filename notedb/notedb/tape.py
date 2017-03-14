@@ -20,13 +20,35 @@ class Tape(Base):
         )
 
 class TapeParser:
-
-    def __init__(self, config):
-        self.config = config
+    
+    FORMAT_NAME_KEY = 'TapeFormat'
+    
+    def __init__(self, input_tape_xls):
+        self.tape_df = pd.read_excel(input_tape_xls)
         
-    def parse_new_tape_xls(self, excel_file):
-        self.data_frame = pd.read_excel(excel_file)
+    def write_tape_xls(self, output_tape_xls):
+        writer = pd.ExcelWriter(output_tape_xls)
+        self.tape_df.to_excel(writer)
+        writer.save()
         
-    def standardize_column_names(self):
-        for standard_name, excel_name in self.config['column_mapping'].items():
-            self.data_frame.rename(columns={excel_name: standard_name}, inplace=True)
+    def update_tape_headers_from_csv(self, csv, format_name):
+        """Update the Tape column headers according to format in the CSV file."""
+        tape_formats = pd.read_csv(csv)
+        header_names = self._get_header_mapping_by_format(tape_formats, format_name)
+        self._rename_or_add_tape_columns(header_names)
+        
+    def _get_header_mapping_by_format(self, tape_formats, format_name):
+        """Return the header_mapping dictionary found by format_name in the tape_formats df."""
+        for index, row in tape_formats.iterrows():
+            if row[self.FORMAT_NAME_KEY] == format_name:
+                return row # Choose first matching row
+        
+    def _rename_or_add_tape_columns(self, header_mapping):
+        """Rename tape columns if a mapping exists, otherwise create new column."""
+        for new_name, old_name in header_mapping.items():
+            try:
+                self.tape_df[new_name] = self.tape_df[old_name]
+                del self.tape_df[old_name]
+            except (KeyError, ValueError):
+                if new_name is not self.FORMAT_NAME_KEY:
+                    self.tape_df[new_name] = ''
