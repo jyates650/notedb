@@ -1,6 +1,6 @@
 from sqlalchemy import Column, Integer, Table, ForeignKey
 from sqlalchemy.orm import relationship
-from notedb.database import Base
+from .database import Base
 
 import logging
 import pandas as pd
