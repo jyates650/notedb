@@ -15,6 +15,9 @@ def main():
     
     tape_parser = TapeParser(args.input_tape)
     
+    if args.format_csv and args.format_name:
+        tape_parser.format_tape_columns(args.format_csv, args.format_name)
+    
     if args.output_tape:
         tape_parser.write_tape_xls(args.output_tape)
 
