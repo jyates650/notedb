@@ -31,15 +31,25 @@ class TestTapeParser:
         df.rename(columns={'TestHeader1': 'Header1'}, inplace=True)
         assert df['Header1'][0] == 'TestData11'
     
-    def test_update_tape_headers_from_csv(self):
+    def test_format_tape_columns(self):
         tape_parser = TapeParser(self.test_tape_format_1_xlsx)
         df = tape_parser.tape_df
         assert df['City'][0] == 'Methuen'
         assert len(df.columns) == 5
-        tape_parser.update_tape_headers_from_csv(self.tape_headers_csv, 'format1')
+        assert df.columns.tolist() == ['State', 'Address', 'City', 'Zip', 'BPO']
+        tape_parser.format_tape_columns(self.tape_headers_csv, 'format1')
         assert df['PropCity'][1] == 'Carlisle'
         assert df['Comment'][0] == ''
         assert len(df.columns) == 6
+        
+    def test_reorder_tape_columns(self):
+        tape_parser = TapeParser(self.simple_test_tape_xlsx)
+        df = tape_parser.tape_df
+        df_cols = df.columns.tolist()
+        assert df_cols == ['TestHeader1', 'TestHeader2']
+        new_order = ['TestHeader2', 'TestHeader1']
+        tape_parser._reorder_columns(new_order)
+        assert tape_parser.tape_df.columns.tolist() == new_order
         
     def test_excel_writing(self):
         tape_parser = TapeParser(self.simple_test_tape_xlsx)
@@ -49,3 +59,12 @@ class TestTapeParser:
         tp2 = TapeParser(out_file)
         df2 = tp2.tape_df
         assert df1['TestHeader1'][1] == df2['TestHeader1'][1]
+        
+    def test_rename_and_reorder_tape_cols(self):
+        tape_parser = TapeParser(self.test_tape_format_1_xlsx)
+        cols = tape_parser.tape_df.columns.tolist()
+        assert cols == ['State', 'Address', 'City', 'Zip', 'BPO']
+        tape_parser.format_tape_columns(self.tape_headers_csv, 'format1')
+        cols = tape_parser.tape_df.columns.tolist()
+        assert cols == ['PropAddr', 'PropCity', 'PropState', 'PropZip', 'BPO', 'Comment']
+        
