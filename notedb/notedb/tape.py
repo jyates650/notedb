@@ -1,42 +1,21 @@
-from sqlalchemy import Column, Integer, Table, ForeignKey
-from sqlalchemy.orm import relationship
-from .database import Base
-
 import logging
-import pandas as pd
+import pandas
 import sys
-    
-tapes_notes_table = Table(
-    'association', Base.metadata,
-    Column('note_id', Integer, ForeignKey('notes.id')),
-    Column('tape_id', Integer, ForeignKey('tapes.id'))
-    )
-
-class Tape(Base):
-    __tablename__ = 'tapes'
-    id = Column(Integer, primary_key=True)
-    notes = relationship(
-        'Note',
-        secondary=tapes_notes_table,
-        back_populates='tapes'
-        )
+from openpyxl import load_workbook
 
 class TapeParser:
     
     FORMAT_NAME_KEY = 'TapeFormat'
     
     def __init__(self, input_tape_xls):
-        self.tape_df = pd.read_excel(input_tape_xls)
+        self.tape_df = pandas.read_excel(input_tape_xls)
         logging.info('Tape parsed from %s', input_tape_xls)
         
-    def write_tape_xls(self, output_tape_xls):
-        writer = pd.ExcelWriter(output_tape_xls)
-        self.tape_df.to_excel(writer)
-        writer.save()
-        logging.info('Tape written to file %s', output_tape_xls)
+    def get_tape_object(self):
+        return Tape(self.tape_df)
         
     def format_tape_columns(self, csv, format_name):
-        tape_formats_df = pd.read_csv(csv)
+        tape_formats_df = pandas.read_csv(csv)
         tape_format = self._get_tape_format(tape_formats_df, format_name)
         self._rename_or_add_columns(tape_format)
         self._reorder_columns(tape_format.keys())
@@ -65,3 +44,40 @@ class TapeParser:
     def _reorder_columns(self, column_order):
         self.tape_df = self.tape_df[column_order]
         logging.info('Tape columns reordered')
+
+
+class Tape:
+    
+    def __init__(self, dataframe):
+        self.dataframe = dataframe
+            
+    def write_xls(self, output_xls, template_xls=None):
+        """Write Tape data to excel file. Populate data into template if provided"""
+        if template_xls:
+            self._write_xls_with_template(output_xls, template_xls)
+        else:
+            self._write_xls_without_template(output_xls)
+        logging.info('Tape written to file %s', output_xls)
+        
+    def _write_xls_with_template(self, output_xls, template_xls):
+        writer = pandas.ExcelWriter(output_xls)
+        
+        # Read in the template and populate with Tape data
+        template_df = pandas.read_excel(template_xls)
+        for col in self.dataframe.columns:
+            template_df[col] = self.dataframe[col]
+        
+        # Make sure other sheets in the template don't get wiped out
+        book = load_workbook(template_xls)
+        writer.book = book
+        writer.sheets = dict((ws.title, ws) for ws in book.worksheets)
+        
+        # Save the populated template DataFrame to the output file
+        template_df.to_excel(writer, index=False)
+        writer.save()
+    
+    def _write_xls_without_template(self, output_xls):
+        writer = pandas.ExcelWriter(output_xls)
+        self.dataframe.to_excel(writer, index=False)
+        writer.save()
+        
