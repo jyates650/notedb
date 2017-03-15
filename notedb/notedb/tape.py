@@ -59,7 +59,19 @@ class TapeParser:
         """Reorder the Tape DataFrame columns to match the column order provided"""
         self.tape_df = self.tape_df[column_order]
         logging.info('Tape columns reordered')
+        
 
+class Tape:
+    """Responsible for storing Tape Data"""
+    
+    def __init__(self, dataframe):
+        self.dataframe = dataframe
+            
+    def write_xls(self, output_xls, template_xls=None):
+        """Write Tape DataFrame to excel file. Use excel output template if provided"""
+        tape_writer = TapeWriter()
+        tape_writer.write_xls(self.dataframe, output_xls, template_xls)
+        
 
 class TapeWriter:
     """Responsible for writing Tape data to an excel file, with support for an output template"""
@@ -105,17 +117,3 @@ class TapeWriter:
         dataframe.to_excel(self.writer, index=False) # Don't write the index column
         self.writer.save()
         logging.info('Tape written to file %s', output_xls)
-        
-
-class Tape:
-    """Responsible for storing Tape Data"""
-    
-    def __init__(self, dataframe):
-        self.dataframe = dataframe
-            
-    def write_xls(self, output_xls, template_xls=None):
-        """Write Tape DataFrame to excel file. Use excel output template if provided"""
-        tape_writer = TapeWriter()
-        tape_writer.write_xls(self.dataframe, output_xls, template_xls)
-
-        
