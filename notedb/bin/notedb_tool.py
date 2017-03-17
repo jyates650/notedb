@@ -1,7 +1,10 @@
+__author__ = 'Jeff Yates (jyates650@gmail.com)'
+
 import argparse
 import logging
 import os
 import sys
+from notedb.common import NotedbUserError
 
 # The notedb package is up one directory
 libpath = os.path.join(os.path.dirname(os.path.realpath(__file__)), '..')
@@ -47,4 +50,13 @@ def init_logging(args):
         logging.basicConfig(level=level, format=log_format)
         
 if __name__ == '__main__':
-    main()
+    try:
+        main()
+    except NotedbUserError as e:
+        logging.error(e)
+        logging.error('Notedb tool has failed')
+        sys.exit(1)
+    except Exception: # pylint: disable=broad-except
+        logging.exception('Something bad happened')
+        logging.error('Please contact %s. He will need to fix this', __author__)
+        sys.exit(2)

@@ -2,6 +2,7 @@ import logging
 import pandas
 import sys
 from openpyxl import load_workbook
+from notedb.common import NotedbUserError
 
 class TapeParser:
     """Responsible for parsing a raw Tape xls file into a Tape object"""
@@ -84,7 +85,7 @@ class TapeWriter:
     def write_xls(self, tape_df, output_xls, template_xls=None):
         """Write Tape DataFrame to excel file. Use excel output template if provided"""
         self.tape_df = tape_df
-        self.writer = pandas.ExcelWriter(output_xls)
+        self.writer = pandas.ExcelWriter(output_xls, engine='openpyxl')
         
         if template_xls:
             self._parse_template(template_xls)
@@ -95,8 +96,10 @@ class TapeWriter:
         
     def _parse_template(self, template_xls):
         """Read template xls. Save the data and sheets in TapeWriter"""
-        # TODO add try/except block
-        self.template_df = pandas.read_excel(template_xls)
+        try:
+            self.template_df = pandas.read_excel(template_xls)
+        except FileNotFoundError:
+            raise NotedbUserError('Unable to find template file: %s', template_xls)
         logging.info('Loaded template: %s', template_xls)
         
         # Make sure other sheets in the template are copied
@@ -106,10 +109,12 @@ class TapeWriter:
         
     def _populate_template_with_tape_data(self):
         """Populate the template DataFrame with matching columns in the Tape DF"""
-        # TODO add try/except block
-        for col in self.template_df.columns:
-            self.template_df[col] = self.tape_df[col]
-        logging.info('Template populated with Tape data')
+        try:
+            for col in self.template_df.columns:
+                self.template_df[col] = self.tape_df[col]
+        except KeyError:
+            logging.warning('Could not find column %s in tape while copying to template', col)
+        logging.info('Finished populating the Template with Tape data')
         
     def _write_dataframe_to_xls(self, dataframe, output_xls):
         """Write the DataFrame to an excel file"""

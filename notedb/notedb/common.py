@@ -1,0 +1,3 @@
+
+class NotedbUserError(Exception):
+    pass
