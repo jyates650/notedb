@@ -3,6 +3,29 @@ import pandas
 import sys
 from openpyxl import load_workbook
 from notedb.common import NotedbUserError
+from xlrd import XLRDError
+       
+class Tape:
+    """Responsible for storing Tape Data"""
+    
+    def __init__(self):
+        self.dataframe = None
+        
+    def read_xls(self, input_xls):
+        """Read a Tape excel file and save as a DataFrame"""
+        try:
+            self.dataframe = pandas.read_excel(input_xls)
+        except FileNotFoundError:
+            raise NotedbUserError('Input file not found: %s', input_xls)
+        except XLRDError:
+            raise NotedbUserError('Input file format not supported. Is it excel?: %s', input_xls)
+        logging.info('Tape data parsed from %s', input_xls)
+            
+    def write_xls(self, output_xls, template_xls=None):
+        """Write Tape DataFrame to excel file. Use excel output template if provided"""
+        tape_writer = TapeWriter()
+        tape_writer.write_xls(self.dataframe, output_xls, template_xls)
+
 
 class TapeParser:
     """Responsible for parsing a raw Tape xls file into a Tape object"""
@@ -60,18 +83,7 @@ class TapeParser:
         """Reorder the Tape DataFrame columns to match the column order provided"""
         self.tape_df = self.tape_df[column_order]
         logging.info('Tape columns reordered')
-        
 
-class Tape:
-    """Responsible for storing Tape Data"""
-    
-    def __init__(self, dataframe):
-        self.dataframe = dataframe
-            
-    def write_xls(self, output_xls, template_xls=None):
-        """Write Tape DataFrame to excel file. Use excel output template if provided"""
-        tape_writer = TapeWriter()
-        tape_writer.write_xls(self.dataframe, output_xls, template_xls)
         
 
 class TapeWriter:
