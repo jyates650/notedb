@@ -27,18 +27,26 @@ class Tape:
         tape_writer.write_xls(self.dataframe, output_xls, template_xls)
 
 
-class TapeParser:
-    """Responsible for parsing a raw Tape xls file into a Tape object"""
+class TapeFormatter:
+    """Responsible for formating the columns of a Tape DataFrame"""
     
-    FORMAT_NAME_KEY = 'TapeFormat'
-    
-    def __init__(self):
-        self.tape_df = None
+    def __init__(self, dataframe):
+        self.dataframe = dataframe
         
-    def parse_tape(self, tape_xls):
-        """Read the tape xls and save as a DataFrame"""
-        self.tape_df = pandas.read_excel(tape_xls)
-        logging.info('Tape data parsed from %s', tape_xls)
+    def rename_column(self, old_name, new_name):
+        """Replace the old column name with a new name"""
+        if old_name in self.dataframe.columns:
+            self.dataframe.rename(columns = {old_name: new_name}, inplace=True)
+            logging.info('Tape column %s renamed to %s', old_name, new_name)
+        else:
+            raise NotedbUserError('Unable to rename column %s: not found in DataFrame', old_name)
+    
+    def create_column(self, name, values):
+        """Create a new column with initial values. Error if column already exists"""
+        if name in self.dataframe.columns:
+            raise NotedbUserError('Unable to create new column %s: column already exists', name)
+        else:
+            self.dataframe[name] = values
         
     def format_tape_columns(self, csv, format_name):
         """Change the tape DataFrame columns according to the format specified in the csv.
@@ -53,10 +61,6 @@ class TapeParser:
         self._rename_or_add_columns(tape_format)
         self._reorder_columns(tape_format.keys())
         logging.info('Tape column formatting completed')
-        
-    def get_tape_object(self):
-        """Return the Tape object created from the parsed tape"""
-        return Tape(self.tape_df)
            
     def _get_tape_format(self, formats_df, format_name):    
         """Return the series of header mappings specified in the formats_df by the format_name"""  
@@ -83,7 +87,6 @@ class TapeParser:
         """Reorder the Tape DataFrame columns to match the column order provided"""
         self.tape_df = self.tape_df[column_order]
         logging.info('Tape columns reordered')
-
         
 
 class TapeWriter:
