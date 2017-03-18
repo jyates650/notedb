@@ -4,7 +4,6 @@ import numpy
 from notedb.tape import TapeFormatter
 from pandas.util.testing import assert_series_equal
 from nose.tools import eq_, raises
-from notedb.common import NotedbUserError
 
 class TestTapeFormatter:
     
@@ -18,7 +17,7 @@ class TestTapeFormatter:
         eq_(formatter.dataframe.columns.tolist(), ['A', 'Boy', 'C', 'D'])
         eq_(formatter.dataframe['Boy'].tolist(), self.test_df['B'].tolist())
         
-    @raises(NotedbUserError)
+    @raises(KeyError)
     def test_rename_column_doesnt_exist(self):
         new_df = self.test_df.copy()
         formatter = TapeFormatter(new_df)

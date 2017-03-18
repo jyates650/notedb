@@ -35,11 +35,10 @@ class TapeFormatter:
         
     def rename_column(self, old_name, new_name):
         """Replace the old column name with a new name"""
-        if old_name in self.dataframe.columns:
-            self.dataframe.rename(columns = {old_name: new_name}, inplace=True)
-            logging.info('Tape column %s renamed to %s', old_name, new_name)
-        else:
-            raise NotedbUserError('Unable to rename column %s: not found in DataFrame', old_name)
+        if old_name not in self.dataframe.columns:
+            raise KeyError('Column %s not found in DataFrame', old_name)
+        self.dataframe.rename(columns = {old_name: new_name}, inplace=True)
+        logging.info('Tape column %s renamed to %s', old_name, new_name)
     
     def create_column(self, name, values):
         """Create a new column with initial values. Error if column already exists"""
