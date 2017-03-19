@@ -10,21 +10,21 @@ from notedb.common import NotedbUserError
 libpath = os.path.join(os.path.dirname(os.path.realpath(__file__)), '..')
 sys.path.insert(1, libpath)
 
-from notedb.tape import TapeParser
+from notedb.tape import Tape
 
 def main():
     args = get_cmdline_arguments()
     init_logging(args)
     
-    tape_parser = TapeParser(args.input_tape)
+    my_tape = Tape()
     
-    if args.format_csv and args.format_name:
-        tape_parser.format_tape_columns(args.format_csv, args.format_name)
+    my_tape.read_xls(args.input_tape)
     
-    tape = tape_parser.get_tape_object()
+    if args.format_csv:
+        my_tape.format_columns_from_csv(args.format_csv)
     
     if args.output_tape:
-        tape.write_xls(args.output_tape, args.template_xls)
+        my_tape.write_xls(args.output_tape, args.template_xls)
 
 def get_cmdline_arguments():
     parser = argparse.ArgumentParser()
@@ -34,7 +34,6 @@ def get_cmdline_arguments():
     parser.add_argument('-l', '--log-file', help='Output log file')
     parser.add_argument('-t', '--template-xls', help='Tape output template file to populate')
     parser.add_argument('--format-csv', help='Tape formatting CSV')
-    parser.add_argument('--format-name', help='Tape format name within CSV')
     return parser.parse_args()
 
 def init_logging(args):

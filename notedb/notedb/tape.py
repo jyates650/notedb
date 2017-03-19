@@ -21,7 +21,11 @@ class Tape:
         """Write Tape DataFrame to excel file. Use excel output template if provided"""
         tape_writer = TapeWriter()
         tape_writer.write_xls(self.dataframe, output_xls, template_xls)
-
+        
+    def format_columns_from_csv(self, format_csv):
+        """Format the Tape column headers according to the mapping in the CSV"""
+        formatter = TapeFormatter(self.dataframe)
+        formatter.format_columns_from_csv(format_csv)
 
 class TapeFormatter:
     """Responsible for formating the columns of a Tape DataFrame"""
