@@ -1,10 +1,11 @@
 import logging
 import pandas
-import sys
+
 from openpyxl import load_workbook
-from notedb.common import NotedbUserError
-from xlrd import XLRDError
-       
+from notedb.common import (NotedbUserError, get_dataframe_from_xls,
+    get_dataframe_from_csv)
+      
+      
 class Tape:
     """Responsible for storing Tape Data"""
     
@@ -13,12 +14,7 @@ class Tape:
         
     def read_xls(self, input_xls):
         """Read a Tape excel file and save as a DataFrame"""
-        try:
-            self.dataframe = pandas.read_excel(input_xls)
-        except FileNotFoundError:
-            raise NotedbUserError('Input file not found: %s', input_xls)
-        except XLRDError:
-            raise NotedbUserError('File format not supported. Is it excel?: %s', input_xls)
+        self.dataframe = get_dataframe_from_xls(input_xls)
         logging.info('Tape data parsed from %s', input_xls)
             
     def write_xls(self, output_xls, template_xls=None):
@@ -66,13 +62,7 @@ class TapeFormatter:
     
     def format_columns_from_csv(self, format_csv):
         """Rename or add new columns according to {new_name: old_name} map inside the CSV"""
-        try:
-            format_df = pandas.read_csv(format_csv)
-        except FileNotFoundError:
-            raise NotedbUserError('File not found; %s', format_csv)
-        except XLRDError:
-            raise NotedbUserError('File format not supported. Is it CSV?: %s', format_csv)
-        
+        format_df = get_dataframe_from_csv(format_csv)
         # Assume first non-header line in CSV is the mapping data   
         format_map = format_df.iloc[0]
         self.format_columns_from_map(format_map)        
@@ -100,13 +90,8 @@ class TapeWriter:
         
     def _parse_template(self, template_xls):
         """Read template xls. Save the data and sheets in TapeWriter"""
-        try:
-            self.template_df = pandas.read_excel(template_xls)
-        except FileNotFoundError:
-            raise NotedbUserError('Unable to find template file: %s', template_xls)
-        except XLRDError:
-            raise NotedbUserError('File format not supported. Is it excel?: %s', template_xls)
-        logging.info('Loaded template: %s', template_xls)
+        self.template_df = get_dataframe_from_xls(template_xls)
+        logging.info('Loaded template from file: %s', template_xls)
         
         # Make sure other sheets in the template are copied
         book = load_workbook(template_xls)

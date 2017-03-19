@@ -8,6 +8,7 @@ from nose.tools import eq_, raises
 from notedb.common import NotedbUserError
 from tests import test_files_dir
 
+
 class TestTapeFormatter:
     
     test_df = pandas.DataFrame(numpy.random.randn(6,4), columns=list('ABCD'))
