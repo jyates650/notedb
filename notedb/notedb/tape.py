@@ -40,8 +40,8 @@ class TapeFormatter:
         self.dataframe.rename(columns = {old_name: new_name}, inplace=True)
         logging.info('Tape column %s renamed to %s', old_name, new_name)
     
-    def create_column(self, name, values):
-        """Create a new column with initial values. Error if column already exists"""
+    def create_column(self, name, values=None):
+        """Create a new column with initialized values. Error if column already exists"""
         if name in self.dataframe.columns:
             raise NotedbUserError('Unable to create new column %s: column already exists', name)
         else:
