@@ -1,4 +1,4 @@
-
+import os
 import pandas
 import numpy
 
@@ -6,6 +6,7 @@ from notedb.tape import TapeFormatter
 from pandas.util.testing import assert_series_equal
 from nose.tools import eq_, raises
 from notedb.common import NotedbUserError
+from tests import test_files_dir
 
 class TestTapeFormatter:
     
@@ -39,3 +40,33 @@ class TestTapeFormatter:
         self.formatter.create_column('foo')
         new_col = self.formatter.dataframe['foo'].tolist()
         eq_(new_col, [None]*6)
+        
+    def test_create_column_with_values_list(self):      
+        my_vals = [1, 3, 5, 7, 9, 11]
+        self.formatter.create_column('bar', my_vals)
+        new_col = self.formatter.dataframe['bar'].tolist()
+        eq_(new_col, my_vals)
+        
+    def test_format_columns_from_full_map(self):
+        format_map = {'Aaa': 'A', 'Bbb': 'B', 'Ccc': 'C', 'Ddd': 'D', 'Eee': 'E'}
+        self.formatter.format_columns_from_map(format_map)
+        new_cols = ['Aaa', 'Bbb', 'Ccc', 'Ddd', 'Eee']
+        eq_(new_cols, self.formatter.dataframe.columns.tolist())
+        new_col_eee = self.formatter.dataframe['Eee'].tolist()
+        eq_(new_col_eee, [None]*6)
+        
+    def test_format_columns_from_partial_map(self):
+        format_map = {'Bbb': 'B', 'Foo': None}
+        self.formatter.format_columns_from_map(format_map)
+        new_cols = ['A', 'Bbb', 'C', 'D', 'Foo']
+        eq_(new_cols, self.formatter.dataframe.columns.tolist())
+        new_col_foo = self.formatter.dataframe['Foo'].tolist()
+        eq_(new_col_foo, [None]*6)
+        
+    def test_format_columns_from_csv(self):
+        format_csv = os.path.join(test_files_dir, 'tape_headers.csv')
+        self.formatter.format_columns_from_csv(format_csv)
+        new_cols = ['Aaa', 'Bbb', 'Ccc', 'Ddd', 'Eee']
+        eq_(new_cols, self.formatter.dataframe.columns.tolist())
+        new_col_eee = self.formatter.dataframe['Eee'].tolist()
+        eq_(new_col_eee, [None]*6)

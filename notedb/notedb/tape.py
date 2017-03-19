@@ -18,7 +18,7 @@ class Tape:
         except FileNotFoundError:
             raise NotedbUserError('Input file not found: %s', input_xls)
         except XLRDError:
-            raise NotedbUserError('Input file format not supported. Is it excel?: %s', input_xls)
+            raise NotedbUserError('File format not supported. Is it excel?: %s', input_xls)
         logging.info('Tape data parsed from %s', input_xls)
             
     def write_xls(self, output_xls, template_xls=None):
@@ -46,47 +46,37 @@ class TapeFormatter:
             raise NotedbUserError('Unable to create new column %s: column already exists', name)
         else:
             self.dataframe[name] = values
-        
-    def format_tape_columns(self, csv, format_name):
-        """Change the tape DataFrame columns according to the format specified in the csv.
-        
-        The first row of the CSV contains the desired column names in the desired order.
-        
-        The first column of the CSV is the format_name label, used to specify a format for a
-        given Tape. This column is not included when mapping names.
-        """
-        tape_formats_df = pandas.read_csv(csv)
-        tape_format = self._get_tape_format(tape_formats_df, format_name)
-        self._rename_or_add_columns(tape_format)
-        self._reorder_columns(tape_format.keys())
-        logging.info('Tape column formatting completed')
-           
-    def _get_tape_format(self, formats_df, format_name):    
-        """Return the series of header mappings specified in the formats_df by the format_name"""  
-        for index, row in formats_df.iterrows():
-            if row[self.FORMAT_NAME_KEY] == format_name:
-                del row[self.FORMAT_NAME_KEY] # Non-Data column
-                return row # Choose first matching row
-        logging.error('Column format "%s" not found')
-        sys.exit()
-        
-    def _rename_or_add_columns(self, tape_format):
-        """Rename tape columns if a mapping exists, otherwise create new column."""
-        for new_name, old_name in tape_format.items():
-            if new_name != old_name:
-                try:
-                    self.tape_df[new_name] = self.tape_df[old_name]
-                    del self.tape_df[old_name]
-                    logging.info('Tape column "%s" renamed to "%s"', old_name, new_name)
-                except (KeyError, ValueError): # old_name column doesn't exist
-                    self.tape_df[new_name] = ''
-                    logging.info('New tape column "%s" created', new_name)
-                    
-    def _reorder_columns(self, column_order):
-        """Reorder the Tape DataFrame columns to match the column order provided"""
-        self.tape_df = self.tape_df[column_order]
+            logging.info('Created new Tape column "%s" with values "%s"', name, values)
+    
+    def reorder_columns(self, column_order):
+        """Reorder the tape columns based on the provided list of column headers"""
+        self.dataframe = self.dataframe[column_order]
         logging.info('Tape columns reordered')
+  
+    def format_columns_from_map(self, format_map):
+        """Rename or add new columns according to a {new_name: old_name} map"""
+        for new_name, old_name in format_map.items():
+            if new_name == old_name:
+                continue
+            try:
+                self.rename_column(old_name, new_name)
+            except KeyError:
+                logging.info('Unable to find column "%s" to rename, creating a new one', old_name)
+                self.create_column(new_name)
+    
+    def format_columns_from_csv(self, format_csv):
+        """Rename or add new columns according to {new_name: old_name} map inside the CSV"""
+        try:
+            format_df = pandas.read_csv(format_csv)
+        except FileNotFoundError:
+            raise NotedbUserError('File not found; %s', format_csv)
+        except XLRDError:
+            raise NotedbUserError('File format not supported. Is it CSV?: %s', format_csv)
         
+        # Assume first non-header line in CSV is the mapping data   
+        format_map = format_df.iloc[0]
+        self.format_columns_from_map(format_map)        
+
 
 class TapeWriter:
     """Responsible for writing Tape data to an excel file, with support for an output template"""
@@ -114,6 +104,8 @@ class TapeWriter:
             self.template_df = pandas.read_excel(template_xls)
         except FileNotFoundError:
             raise NotedbUserError('Unable to find template file: %s', template_xls)
+        except XLRDError:
+            raise NotedbUserError('File format not supported. Is it excel?: %s', template_xls)
         logging.info('Loaded template: %s', template_xls)
         
         # Make sure other sheets in the template are copied
