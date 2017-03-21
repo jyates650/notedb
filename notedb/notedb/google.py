@@ -22,6 +22,6 @@ def get_google_search_url(search_terms, website=None):
     """Return the Google search URL for the given search terms and optional website."""
     return get_google_url('/search', search_terms, website)
 
-def get_google_maps_url(search_terms, website=None):
+def get_google_maps_url(search_terms):
     """Return the Google Maps search URL for the given terms and optional website."""
-    return get_google_url('/maps', search_terms, website)
+    return get_google_url('/maps', search_terms)
