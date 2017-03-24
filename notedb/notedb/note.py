@@ -1,6 +1,8 @@
 """This module models a Note, which contains an Address"""
 
+from sqlalchemy import Column, Integer, String
 from notedb.google import get_google_maps_url, get_google_search_url
+from notedb.database import Base
 
 class Note:
     """Holds all data contained in a Note"""
@@ -9,8 +11,14 @@ class Note:
         self.address = address
 
 
-class Address:
-    """Contains information regarding the address of a note"""
+class Address(Base):
+    """Models the Address database table"""
+    __tablename__ = 'address'
+    id = Column(Integer, primary_key=True)
+    address = Column(String(100))
+    city = Column(String(25))
+    state = Column(String(2))
+    zipcode = Column(Integer)
 
     REQUIRED_ARGS = ['address', 'city', 'state', 'zipcode']
     """These arguments are required to instantiate a new Address"""

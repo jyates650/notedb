@@ -8,7 +8,7 @@ host = 'localhost'
 port = '3306'
 database = 'dev_notedb'
 
-#engine = create_engine('mysql+mysqlconnector://root:bassfish@localhost/dev_notedb', echo=True)
+#engine = create_engine('mysql+mysqlconnector://root:bassfish@localhost/dev_notedb')
 
 Base = declarative_base()
 #Base.metadata.create_all(engine)
