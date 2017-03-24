@@ -2,15 +2,15 @@ import logging
 import pandas
 
 from openpyxl import load_workbook
-from notedb.common import (NotedbUserError, get_dataframe_from_xls,
-    get_dataframe_from_csv)
-      
+from notedb.common import NotedbUserError, get_dataframe_from_xls, get_dataframe_from_csv
+from notedb.note import Address, Note      
       
 class Tape:
     """Responsible for storing Tape Data"""
     
     def __init__(self):
         self.dataframe = None
+        self.notes = []
         
     def read_xls(self, input_xls):
         """Read a Tape excel file and save as a DataFrame"""
@@ -26,6 +26,27 @@ class Tape:
         """Format the Tape column headers according to the mapping in the CSV"""
         formatter = TapeFormatter(self.dataframe)
         formatter.format_columns_from_csv(format_csv)
+        
+    def populate_database_objects(self):
+        """Instantiate the SQL database objects for this Tape"""
+        for _, note_data in self.dataframe.iterrows():
+            address = self._get_address_object(note_data)
+            note = self._get_note_object(address, note_data)
+            self.notes.append(note)
+
+    def _get_address_object(self, note_data):
+        """Return an address object for the provided raw note_data"""
+        args = {}
+        for arg in Address.REQUIRED_ARGS:
+            try:
+                args[arg] = note_data[arg]
+            except KeyError:
+                raise NotedbUserError('Unable to find Column "{}" in the Tape.'.format(arg))
+        return Address(**args)
+
+    def _get_note_object(self, address, note_data):
+        """Return a Note object for the provided Address object and raw note_data"""
+        return Note(address)
 
 class TapeFormatter:
     """Responsible for formating the columns of a Tape DataFrame"""
