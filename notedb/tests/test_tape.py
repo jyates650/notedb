@@ -9,6 +9,7 @@ from notedb.tape import Tape
 from pandas.util.testing import assert_frame_equal
 from tests import test_files_dir
 from notedb.note import Address
+import copy
 
 class TestSimpleTape:
     """Class to test simple Tape operations"""
@@ -63,3 +64,9 @@ class TestRealTape:
         addr = Address('345 H St.', 'Sacramento', 'CA', 95811)
         note = self.tape._get_note_object(addr, 'bogus')
         eq_(note.address, addr)
+
+    def test_pop_objects(self):
+        """Test Tape can create Note objects containing address objects"""
+        tape = copy.deepcopy(self.tape)
+        tape.populate_database_objects()
+        eq_(tape.notes[1].address.state, 'PA')
