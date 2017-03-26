@@ -8,7 +8,7 @@ from notedb.common import NotedbUserError, get_dataframe_from_xls
 from notedb.tape import Tape
 from pandas.util.testing import assert_frame_equal
 from tests import test_files_dir
-from notedb.note import Address
+from notedb.note import Note
 import copy
 
 class TestSimpleTape:
@@ -56,17 +56,11 @@ class TestRealTape:
     def test_get_address(self):
         """Test that getting an Address from the note works"""
         note_data = self.tape.dataframe.iloc[0]
-        addr = self.tape._get_address_object(note_data)
-        eq_(str(addr), '8 Brown St, Methuen, MA 01844')
-
-    def test_get_note(self):
-        """Test getting a note from an Address and note data"""
-        addr = Address('345 H St.', 'Sacramento', 'CA', 95811)
-        note = self.tape._get_note_object(addr, 'bogus')
-        eq_(note.address, addr)
+        note = self.tape._get_note_object(note_data)
+        eq_(note.get_address(), '8 Brown St, Methuen, MA 01844')
 
     def test_pop_objects(self):
         """Test Tape can create Note objects containing address objects"""
         tape = copy.deepcopy(self.tape)
         tape.populate_database_objects()
-        eq_(tape.notes[1].address.state, 'PA')
+        eq_(tape.notes[1].state, 'PA')

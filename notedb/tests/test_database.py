@@ -4,7 +4,7 @@ from notedb.database import Base
 import notedb.note
 
 def test_database():
-    engine = create_engine('mysql+mysqlconnector://root:bassfish@localhost/dev_notedb', echo=True)
+    engine = create_engine('mysql+mysqlconnector://root:bassfish@localhost/dev_notedb')
     Session = sessionmaker()
     Session.configure(bind=engine)
     Base.metadata.create_all(engine)
@@ -12,5 +12,3 @@ def test_database():
     ##session = Session()
     #session.add(addr)
     #session.commit()
-    
-test_database()
