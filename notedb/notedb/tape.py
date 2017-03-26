@@ -30,23 +30,19 @@ class Tape:
     def populate_database_objects(self):
         """Instantiate the SQL database objects for this Tape"""
         for _, note_data in self.dataframe.iterrows():
-            address = self._get_address_object(note_data)
-            note = self._get_note_object(address, note_data)
+            note = self._get_note_object(note_data)
             self.notes.append(note)
 
-    def _get_address_object(self, note_data):
-        """Return an address object for the provided raw note_data"""
+    def _get_note_object(self, note_data):
+        """Return a Note object for the provided raw note_data"""
         args = {}
-        for arg in Address.REQUIRED_ARGS:
+        for arg in Note.REQUIRED_ARGS:
             try:
                 args[arg] = note_data[arg]
             except KeyError:
                 raise NotedbUserError('Unable to find Column "{}" in the Tape.'.format(arg))
-        return Address(**args)
+        return Note(**args)
 
-    def _get_note_object(self, address, note_data):
-        """Return a Note object for the provided Address object and raw note_data"""
-        return Note(address)
 
 class TapeFormatter:
     """Responsible for formating the columns of a Tape DataFrame"""
