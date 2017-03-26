@@ -4,13 +4,13 @@ import argparse
 import logging
 import os
 import sys
-from notedb.common import NotedbUserError
 
 # The notedb package is up one directory
 libpath = os.path.join(os.path.dirname(os.path.realpath(__file__)), '..')
 sys.path.insert(1, libpath)
 
 from notedb.tape import Tape
+from notedb.common import NotedbUserError
 
 def main():
     args = get_cmdline_arguments()
@@ -22,6 +22,8 @@ def main():
     
     if args.format_csv:
         my_tape.format_columns_from_csv(args.format_csv)
+        
+    my_tape.populate_database_objects()
     
     if args.output_tape:
         my_tape.write_xls(args.output_tape, args.template_xls)

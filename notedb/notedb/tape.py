@@ -3,7 +3,7 @@ import pandas
 
 from openpyxl import load_workbook
 from notedb.common import NotedbUserError, get_dataframe_from_xls, get_dataframe_from_csv
-from notedb.note import Address, Note      
+from notedb.note import Note      
       
 class Tape:
     """Responsible for storing Tape Data"""
@@ -18,9 +18,12 @@ class Tape:
         logging.info('Tape data parsed from %s', input_xls)
             
     def write_xls(self, output_xls, template_xls=None):
-        """Write Tape DataFrame to excel file. Use excel output template if provided"""
+        """Write Tape data to excel file. Use excel output template if provided"""
+        tape_df = pandas.DataFrame()
+        for note in self.notes:
+            tape_df = tape_df.append(note.as_pandas_series(), ignore_index=True)
         tape_writer = TapeWriter()
-        tape_writer.write_xls(self.dataframe, output_xls, template_xls)
+        tape_writer.write_xls(tape_df, output_xls, template_xls)
         
     def format_columns_from_csv(self, format_csv):
         """Format the Tape column headers according to the mapping in the CSV"""
