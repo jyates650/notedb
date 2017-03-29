@@ -34,6 +34,9 @@ class Note(Base):
         self.trulia_url = None
         self.zillow_url = None
         self._create_google_urls()
+        
+    def __str__(self):
+        return self.get_address()
 
     def get_address(self):
         """Return the full address of the Note in a string"""

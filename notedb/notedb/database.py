@@ -1,14 +1,9 @@
-#from sqlalchemy import create_engine
+"""Module for connections to the Note Database"""
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker
 from sqlalchemy.ext.declarative import declarative_base
 
-
-#user = 'root'
-#password = 'bassfish'
-#host = 'localhost'
-#port = '3306'
-#database = 'dev_notedb'
-
-#engine = create_engine('mysql+mysqlconnector://root:bassfish@localhost/dev_notedb')
-
-Base = declarative_base()
-#Base.metadata.create_all(engine)
+Base = declarative_base()engine = create_engine('mysql+mysqlconnector://root:bassfish@localhost/dev_notedb')
+Session = sessionmaker()
+Session.configure(bind=engine)
+session = Session()

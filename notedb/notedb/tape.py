@@ -3,7 +3,8 @@ import pandas
 
 from openpyxl import load_workbook
 from notedb.common import NotedbUserError, get_dataframe_from_xls, get_dataframe_from_csv
-from notedb.note import Note      
+from notedb.note import Note
+from notedb.database import session
       
 class Tape:
     """Responsible for storing Tape Data"""
@@ -36,15 +37,63 @@ class Tape:
             note = self._get_note_object(note_data)
             self.notes.append(note)
 
+    def upload_tape_to_database(self):
+        """Upload the Tape data to the database"""
+        for note in self.notes:
+            session.add(note)
+        session.commit()
+        logging.info('Tape uploaded to database')
+
     def _get_note_object(self, note_data):
         """Return a Note object for the provided raw note_data"""
-        args = {}
+        req_data = self._get_required_note_data(note_data)
+        note = self._get_note_from_database(req_data)
+        if note is None:
+            note = Note(**req_data)
+        self._update_optional_note_data(note, note_data)
+        return note
+    
+    def _get_required_note_data(self, note_data):
+        """Return a dict of the required Note data pulled from the incoming note.
+        Required data contains the minimum attributes required to enter a new Note into the DB
+        """
+        data = {}
         for arg in Note.REQUIRED_ARGS:
             try:
-                args[arg] = note_data[arg]
+                data[arg] = note_data[arg]
             except KeyError:
                 raise NotedbUserError('Unable to find Column "{}" in the Tape.'.format(arg))
-        return Note(**args)
+        return data
+    
+    def _get_note_from_database(self, req_args):
+        """Search for the Note in the database and return if found, otherwise return None.
+        Use the required arguments specified in the Note class to query the database
+        """
+        q = session.query(Note)
+        for name, value in req_args.items():
+            q = q.filter(getattr(Note, name) == value)
+        note = q.one_or_none()
+        if note is not None:
+            logging.info('Found existing Note in database: %s', str(note))
+        return note
+    
+    def _update_optional_note_data(self, note, note_data):
+        """Update the Note object with any optional data contained in the incoming tape"""
+        optional_data = self._get_optional_note_data(note_data)
+        for name, value in optional_data.items():
+            setattr(note, name, value)
+    
+    def _get_optional_note_data(self, note_data):
+        """Return a dict of optional note data to add to the record"""
+        data = {}
+        for arg in Note.OPTIONAL_ARGS:
+            try:
+                data[arg] = note_data[arg]
+            except KeyError:
+                pass
+        return data
+        
+        
 
 
 class TapeFormatter:

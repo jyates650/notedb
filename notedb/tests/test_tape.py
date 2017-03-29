@@ -8,7 +8,6 @@ from notedb.common import NotedbUserError, get_dataframe_from_xls
 from notedb.tape import Tape
 from pandas.util.testing import assert_frame_equal
 from tests import test_files_dir
-from notedb.note import Note
 import copy
 
 class TestSimpleTape:

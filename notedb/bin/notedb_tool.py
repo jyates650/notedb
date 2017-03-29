@@ -24,6 +24,7 @@ def main():
         my_tape.format_columns_from_csv(args.format_csv)
         
     my_tape.populate_database_objects()
+    my_tape.upload_tape_to_database()
     
     if args.output_tape:
         my_tape.write_xls(args.output_tape, args.template_xls)
