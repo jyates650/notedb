@@ -58,5 +58,5 @@ class Note(Base):
 
     @orm.reconstructor
     def _init_on_load(self):
-        """This is called when the object is loaded from the Database. __init__ is not called"""
+        """Called when the object is loaded from the Database since __init__ is not called"""
         self._create_google_urls()
