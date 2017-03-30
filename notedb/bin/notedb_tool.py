@@ -1,6 +1,7 @@
 __author__ = 'Jeff Yates (jyates650@gmail.com)'
 
 import argparse
+import getpass
 import logging
 import os
 import sys
@@ -11,20 +12,29 @@ sys.path.insert(1, libpath)
 
 from notedb.tape import Tape
 from notedb.common import NotedbUserError
+from notedb.database import db
 
 def main():
     args = get_cmdline_arguments()
     init_logging(args)
     
+    user = input('Database username: ')
+    passwd = getpass.getpass('Database password: ')
+    try:
+        db.connect_to_database('mysql+mysqlconnector', user, passwd, 'localhost', 'dev_notedb')
+    except NotedbUserError:
+        logging.info('Proceeding without database connection')
+        
     my_tape = Tape()
-    
     my_tape.read_xls(args.input_tape)
     
     if args.format_csv:
         my_tape.format_columns_from_csv(args.format_csv)
         
     my_tape.populate_database_objects()
-    my_tape.upload_tape_to_database()
+    
+    if db.connected:
+        my_tape.upload_tape_to_database()
     
     if args.output_tape:
         my_tape.write_xls(args.output_tape, args.template_xls)

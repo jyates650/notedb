@@ -1,6 +1,6 @@
 """Contains all data and functions relating to a Note"""
 
-from sqlalchemy import Column, Integer, String
+from sqlalchemy import Column, Integer, String, orm
 from notedb.google import get_google_maps_url, get_google_search_url
 from notedb.database import Base
 import pandas
@@ -46,7 +46,7 @@ class Note(Base):
         """Return the contents of the Note as a Pandas Series object"""
         series_data = {}
         for key in (self.REQUIRED_ARGS + self.OPTIONAL_ARGS + self.UNSAVED_ARGS):
-            series_data[key] = self.__dict__[key]
+            series_data[key] = getattr(self, key)
         return pandas.Series(series_data)
 
     def _create_google_urls(self):
@@ -55,3 +55,8 @@ class Note(Base):
         self.google_maps_url = get_google_maps_url(address)
         self.trulia_url = get_google_search_url(address, website='trulia.com')
         self.zillow_url = get_google_search_url(address, website='zillow.com')
+
+    @orm.reconstructor
+    def _init_on_load(self):
+        """This is called when the object is loaded from the Database. __init__ is not called"""
+        self._create_google_urls()

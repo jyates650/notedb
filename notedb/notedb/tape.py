@@ -4,7 +4,7 @@ import pandas
 from openpyxl import load_workbook
 from notedb.common import NotedbUserError, get_dataframe_from_xls, get_dataframe_from_csv
 from notedb.note import Note
-from notedb.database import session
+from notedb.database import db
       
 class Tape:
     """Responsible for storing Tape Data"""
@@ -40,14 +40,16 @@ class Tape:
     def upload_tape_to_database(self):
         """Upload the Tape data to the database"""
         for note in self.notes:
-            session.add(note)
-        session.commit()
+            db.session.add(note)
+        db.session.commit()
         logging.info('Tape uploaded to database')
 
     def _get_note_object(self, note_data):
         """Return a Note object for the provided raw note_data"""
         req_data = self._get_required_note_data(note_data)
-        note = self._get_note_from_database(req_data)
+        note = None
+        if db.connected:
+            note = self._get_note_from_database(req_data)
         if note is None:
             note = Note(**req_data)
         self._update_optional_note_data(note, note_data)
@@ -69,7 +71,7 @@ class Tape:
         """Search for the Note in the database and return if found, otherwise return None.
         Use the required arguments specified in the Note class to query the database
         """
-        q = session.query(Note)
+        q = db.session.query(Note)
         for name, value in req_args.items():
             q = q.filter(getattr(Note, name) == value)
         note = q.one_or_none()
@@ -92,8 +94,6 @@ class Tape:
             except KeyError:
                 pass
         return data
-        
-        
 
 
 class TapeFormatter:
